@@ -1,2 +1,2 @@
-# qouran-institutes-system
+# quran-institutes-system
 نظام لادارة مراكز القرآن يهدف النظام لاستبدال الورق وتحويل التعامل بين الطالب والشيخ اونلاين 
