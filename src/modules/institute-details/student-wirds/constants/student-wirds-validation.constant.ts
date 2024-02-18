@@ -1,0 +1,6 @@
+export const STUDETN_WIRD_VALIDATION = {
+  WIRD_CONTENT: {
+    MAX_LENGTH: 200,
+    MIN_LNEGTH: 5,
+  },
+};
