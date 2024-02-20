@@ -5,6 +5,7 @@ import { SCHEMAS } from '@shared/constants/schemas.constant';
 import { Types } from 'mongoose';
 import { INSTITUTE_VALIDSTION } from '../constants/institutes-validation.constant';
 import { GLOBAL_VALIDATION } from '@shared/constants/validation-helpers.constant';
+import { InstituteStatus } from '../enums/institute-status.enum';
 
 @Schema({ timestamps: true })
 export class Institute {
@@ -55,6 +56,12 @@ export class Institute {
     default: undefined,
   })
   teachers?: UserDocument[];
+  @Prop({
+    type: Number,
+    enum: InstituteStatus,
+    default: InstituteStatus.ACTIVE,
+  })
+  isntituteStatus!: InstituteStatus;
 }
 
 export const InstituteSchema = SchemaFactory.createForClass(Institute);

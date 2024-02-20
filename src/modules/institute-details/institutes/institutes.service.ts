@@ -3,7 +3,7 @@ import { CreateInstituteDto } from './dto/create-institute.dto';
 import { UpdateInstituteDto } from './dto/update-institute.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { SCHEMAS } from '@shared/constants/schemas.constant';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InstituteDocument } from './types/institute-document.type';
 import { AdminsService } from '@modules/system-users/admins/admins.service';
 import { ResponseFromServiceI } from '@shared/interfaces/general/response-from-service.interface';
@@ -69,12 +69,59 @@ export class InstitutesService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} institute`;
+  async findOne(
+    instituteID: string,
+  ): Promise<ResponseFromServiceI<InstituteDocument>> {
+    const institute = await this.findInstituteByID(instituteID);
+    if (!institute)
+      throw new HttpException(
+        'institute does not exist!',
+        HttpStatus.NOT_FOUND,
+      );
+
+    return {
+      data: institute,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findOne',
+        args: { entity: 'entities.institute' },
+      },
+    };
   }
 
-  update(id: number, updateInstituteDto: UpdateInstituteDto) {
-    return `This action updates a #${id} ${updateInstituteDto} institute`;
+  async update(
+    updateInstituteDto: UpdateInstituteDto,
+    instituteID: string,
+    instituteManagerID: string,
+  ): Promise<ResponseFromServiceI<InstituteDocument>> {
+    const [isntituteManager, institute] = await Promise.all([
+      this.instituteManagersService.findInstituteManagerOrSuperAdminByID(
+        instituteManagerID,
+      ),
+      this.findInstituteByID(instituteID),
+    ]);
+    if (!isntituteManager)
+      throw new HttpException(
+        'you are not authorized for this action',
+        HttpStatus.BAD_REQUEST,
+      );
+    if (!institute)
+      throw new HttpException("institute Doesn't exist", HttpStatus.NOT_FOUND);
+    await this.instituteModel
+      .updateOne(
+        { _id: new Types.ObjectId(instituteID) },
+        { $set: { ...updateInstituteDto } },
+      )
+      .exec();
+
+    return {
+      data: institute,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.institute' },
+      },
+    };
   }
 
   remove(id: number) {

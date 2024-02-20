@@ -34,18 +34,26 @@ export class InstitutesController {
     return this.institutesService.findAll();
   }
 
-  @Roles([Role.SUPER_ADMIN])
+  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Get(ROUTES.INSTITUTES.FIND_ONE)
-  findOne(@Param('institutesID') institutesID: string) {
-    return this.institutesService.findOne(+institutesID);
+  findOneInstituteForInstituteManagers(
+    @Param('institutesID') institutesID: string,
+  ) {
+    return this.institutesService.findOne(institutesID);
   }
 
+  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Patch(ROUTES.INSTITUTES.UPDATE_ONE)
   update(
-    @Param('institutesID') institutesID: string,
     @Body() updateInstituteDto: UpdateInstituteDto,
+    @Param('institutesID') instituteID: string,
+    @UserID() instituteManagerID: string,
   ) {
-    return this.institutesService.update(+institutesID, updateInstituteDto);
+    return this.institutesService.update(
+      updateInstituteDto,
+      instituteID,
+      instituteManagerID,
+    );
   }
 
   @Delete(ROUTES.INSTITUTES.DELETE_ONE)
@@ -55,7 +63,7 @@ export class InstitutesController {
 
   @Roles([Role.ADMIN, Role.SUPER_ADMIN])
   @Patch(ROUTES.INSTITUTES.ADD_INSTITUTE_MANAGER)
-  addAdmin(
+  addInstituteManager(
     @Param('institutesID') institutesID: string,
     @Param('managerID') managerID: string,
     @UserID() adminID: string,
