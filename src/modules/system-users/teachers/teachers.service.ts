@@ -10,6 +10,7 @@ import { UserDocument } from '../users/types/user-document.type';
 // import { DivisionDocument } from '@modules/institute-details/divisions/types/division-document.type';
 import { InstitutesService } from '@modules/institute-details/institutes/institutes.service';
 import { InstituteManagersService } from '../institute-managers/institute-managers.service';
+import { AccountStatus } from '../users/enums/account-status.enum';
 
 @Injectable()
 export class TeachersService {
@@ -29,13 +30,18 @@ export class TeachersService {
   ): Promise<UserDocument> {
     const [author, isntitute] = await Promise.all([
       await this.instituteManagersService.findInstituteManagerByID(authorID),
-      await this.institutesService.findInstituteByID(instituteID),
+      await this.institutesService.findActiveInstituteByID(instituteID),
     ]);
 
     if (!author)
       throw new HttpException(
         'what are you trying to do !-_-',
         HttpStatus.BAD_REQUEST,
+      );
+    if (!isntitute)
+      throw new HttpException(
+        'institute does not exist!',
+        HttpStatus.NOT_FOUND,
       );
     if (
       !isntitute?.instituteManagers?.includes(
@@ -47,7 +53,6 @@ export class TeachersService {
         'yoy are not an adming of this intitute',
         HttpStatus.NOT_FOUND,
       );
-    if (!isntitute) throw new HttpException('dfds', HttpStatus.NOT_FOUND);
 
     const teacherToCreate = new this.teacherModel(createTeacherDto);
     teacherToCreate.role = Role.TEACHER;
@@ -91,12 +96,17 @@ export class TeachersService {
           },
         },
         { role: Role.TEACHER },
+        { accountStatus: AccountStatus.ACTIVE },
       ],
     });
   }
   async findTeacherByID(teacherID: string): Promise<UserDocument | null> {
     return this.teacherModel.findOne<UserDocument>({
-      $and: [{ _id: new Types.ObjectId(teacherID) }, { role: Role.TEACHER }],
+      $and: [
+        { _id: new Types.ObjectId(teacherID) },
+        { role: Role.TEACHER },
+        { accountStatus: AccountStatus.ACTIVE },
+      ],
     });
   }
   remove(id: number) {

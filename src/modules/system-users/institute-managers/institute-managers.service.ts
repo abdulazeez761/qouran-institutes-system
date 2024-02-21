@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SCHEMAS } from '@shared/constants/schemas.constant';
 import { Model, Types } from 'mongoose';
 import { User } from '../users/entities/user.entity';
+import { AccountStatus } from '../users/enums/account-status.enum';
 
 @Injectable()
 export class InstituteManagersService {
@@ -55,9 +56,11 @@ export class InstituteManagersService {
     return await this.instituteManagerModel.findOne<UserDocument>({
       $and: [
         { _id: new Types.ObjectId(instituteManagerID) },
+
         {
           role: Role.ADMIN,
         },
+        { accountStatus: AccountStatus.ACTIVE },
       ],
     });
   }
@@ -70,6 +73,7 @@ export class InstituteManagersService {
         {
           $or: [{ role: Role.ADMIN }, { role: Role.SUPER_ADMIN }],
         },
+        { accountStatus: AccountStatus.ACTIVE },
       ],
     });
   }

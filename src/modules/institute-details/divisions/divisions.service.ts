@@ -4,7 +4,7 @@ import { CreateDivisionDto } from './dto/create-division.dto';
 import { UpdateDivisionDto } from './dto/update-division.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { SCHEMAS } from '@shared/constants/schemas.constant';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { InstitutesService } from '../institutes/institutes.service';
 import { DivisionDocument } from './types/division-document.type';
 import { UserDocument } from '@modules/system-users/users/types/user-document.type';
@@ -12,6 +12,8 @@ import { Role } from '@shared/enums/role.enum';
 import { InstituteManagersService } from '@modules/system-users/institute-managers/institute-managers.service';
 import { StudentsService } from '@modules/system-users/students/students.service';
 import { TeachersService } from '@modules/system-users/teachers/teachers.service';
+import { DivisionStatus } from './enum/division-status.enum';
+import { InstituteStatus } from '../institutes/enum/institute-status.enum';
 
 @Injectable()
 export class DivisionsService {
@@ -29,7 +31,7 @@ export class DivisionsService {
     isntituteManagerID: string,
   ) {
     const [institute, instituteManager] = await Promise.all([
-      this.institutesService.findInstituteByID(institutesID),
+      this.institutesService.findActiveInstituteByID(institutesID),
       this.instituteManagersService.findInstituteManagerByID(
         isntituteManagerID,
       ),
@@ -39,8 +41,10 @@ export class DivisionsService {
         'what are you trying to do !-_-',
         HttpStatus.BAD_REQUEST,
       );
+
     if (!institute)
       throw new HttpException("institute Doesn't exist!", HttpStatus.NOT_FOUND);
+
     if (
       !institute.instituteManagers?.includes(
         isntituteManagerID as unknown as UserDocument,
@@ -88,7 +92,7 @@ export class DivisionsService {
     instituteManagerID: string,
   ): Promise<ResponseFromServiceI<DivisionDocument>> {
     const [division, student, instituteManager] = await Promise.all([
-      this.findDivivsionByID(divisionID),
+      this.findDivisinByID(divisionID),
       this.stduentsService.findStudentByID(studentID),
       this.instituteManagersService.findInstituteManagerByID(
         instituteManagerID,
@@ -105,6 +109,9 @@ export class DivisionsService {
         'what are you trying to do!',
         HttpStatus.BAD_REQUEST,
       );
+
+    if (division.institute?.isntituteStatus === InstituteStatus.DELETED)
+      throw new HttpException('institute is deletted', HttpStatus.BAD_REQUEST);
 
     if (
       division.students?.includes(student._id as unknown as UserDocument) ||
@@ -141,7 +148,7 @@ export class DivisionsService {
     instituteManagerID: string,
   ): Promise<ResponseFromServiceI<DivisionDocument>> {
     const [division, teacher, instituteManager] = await Promise.all([
-      this.findDivivsionByID(divisionID),
+      this.findDivisinByID(divisionID),
       this.teachersService.findTeacherByID(teacherID),
       this.instituteManagersService.findInstituteManagerByID(
         instituteManagerID,
@@ -150,6 +157,9 @@ export class DivisionsService {
 
     if (!division)
       throw new HttpException('division does not exist', HttpStatus.NOT_FOUND);
+
+    if (division.institute?.isntituteStatus === InstituteStatus.DELETED)
+      throw new HttpException('institute is deletted', HttpStatus.BAD_REQUEST);
 
     if (!teacher)
       throw new HttpException('teacher does not exist', HttpStatus.NOT_FOUND);
@@ -188,12 +198,55 @@ export class DivisionsService {
       },
     };
   }
-  findAll() {
-    return `This action returns all divisions`;
+  async findAll(): Promise<ResponseFromServiceI<DivisionDocument[]>> {
+    const divisions = await this.divisionModel.find().exec();
+
+    return {
+      data: divisions,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findAll',
+        args: { entity: 'entities.division' },
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} division`;
+  async findInstituteDivisions(
+    instituteID: string,
+  ): Promise<ResponseFromServiceI<DivisionDocument[]>> {
+    const InstituteDivisions = await this.divisionModel.find<DivisionDocument>({
+      institute: new Types.ObjectId(instituteID),
+    });
+
+    return {
+      data: InstituteDivisions,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findAll',
+        args: { entity: 'entities.division' },
+      },
+    };
+  }
+
+  async findOne(instituteID: string, divisinID: string) {
+    const division = await this.divisionModel.find<DivisionDocument>({
+      $and: [
+        { _id: new Types.ObjectId(divisinID) },
+        { institute: new Types.ObjectId(instituteID) },
+      ],
+    });
+
+    if (!division)
+      throw new HttpException('division does not exist', HttpStatus.NOT_FOUND);
+
+    return {
+      data: division,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findOne',
+        args: { entity: 'entities.division' },
+      },
+    };
   }
 
   update(id: number, updateDivisionDto: UpdateDivisionDto) {
@@ -203,9 +256,23 @@ export class DivisionsService {
   remove(id: number) {
     return `This action removes a #${id} division`;
   }
-  async findDivivsionByID(
-    divisionID: string,
-  ): Promise<DivisionDocument | null> {
-    return this.divisionModel.findById<DivisionDocument>(divisionID);
+  async findDivisinByID(divisionID: string): Promise<DivisionDocument | null> {
+    return (
+      this.divisionModel
+        .findOne<DivisionDocument>({
+          $and: [
+            { _id: new Types.ObjectId(divisionID) },
+            {
+              divisionStatus: DivisionStatus.ACTIVE,
+            },
+          ],
+        })
+        //populate should be enhanced or has its's own service because i'll be using it alot around the application
+        .populate({
+          path: 'institute',
+          select: { isntituteStatus: 1 },
+        })
+        .exec()
+    );
   }
 }

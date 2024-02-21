@@ -5,7 +5,7 @@ import { SCHEMAS } from '@shared/constants/schemas.constant';
 import { Types } from 'mongoose';
 import { INSTITUTE_VALIDSTION } from '../constants/institutes-validation.constant';
 import { GLOBAL_VALIDATION } from '@shared/constants/validation-helpers.constant';
-import { InstituteStatus } from '../enums/institute-status.enum';
+import { InstituteStatus } from '../enum/institute-status.enum';
 
 @Schema({ timestamps: true })
 export class Institute {

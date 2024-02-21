@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { InstitutesService } from './institutes.service';
 import { CreateInstituteDto } from './dto/create-institute.dto';
 import { UpdateInstituteDto } from './dto/update-institute.dto';
@@ -36,9 +28,7 @@ export class InstitutesController {
 
   @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Get(ROUTES.INSTITUTES.FIND_ONE)
-  findOneInstituteForInstituteManagers(
-    @Param('institutesID') institutesID: string,
-  ) {
+  findOne(@Param('institutesID') institutesID: string) {
     return this.institutesService.findOne(institutesID);
   }
 
@@ -55,10 +45,28 @@ export class InstitutesController {
       instituteManagerID,
     );
   }
+  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
+  @Patch(ROUTES.INSTITUTES.DELETE_ONE)
+  softDeleteInstitute(
+    @Param('institutesID') instituteID: string,
+    @UserID() instituteManagerID: string,
+  ) {
+    return this.institutesService.softDeleteInstitute(
+      instituteID,
+      instituteManagerID,
+    );
+  }
 
-  @Delete(ROUTES.INSTITUTES.DELETE_ONE)
-  remove(@Param('institutesID') institutesID: string) {
-    return this.institutesService.remove(+institutesID);
+  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
+  @Patch(ROUTES.INSTITUTES.UN_DELETE_ONE)
+  unDeleteInstitute(
+    @Param('institutesID') instituteID: string,
+    @UserID() instituteManagerID: string,
+  ) {
+    return this.institutesService.unDeletInsitiute(
+      instituteID,
+      instituteManagerID,
+    );
   }
 
   @Roles([Role.ADMIN, Role.SUPER_ADMIN])

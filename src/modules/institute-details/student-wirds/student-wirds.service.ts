@@ -27,7 +27,7 @@ export class StudentWirdsService {
     divisionID: string,
   ): Promise<ResponseFromServiceI<StudentWirddDocument>> {
     const [division, teacher, student] = await Promise.all([
-      this.divisionsService.findDivivsionByID(divisionID),
+      this.divisionsService.findDivisinByID(divisionID),
       this.teachersService.findTeacherByDivisionID(teacherID, divisionID),
       this.studentsService.findStudentByDivisonID(studentID, divisionID),
     ]);
@@ -63,7 +63,14 @@ export class StudentWirdsService {
         translationKey: 'shared.success.create',
         args: { entity: 'entities.user' },
       },
-      data: createdWird,
+      /* Most JavaScript codebases consider objects
+      created using curly braces {} to be POJOs. that's why I'm using toJson insted of
+      toOjbect because toObject convert the data into pojo 
+      and my response type is key and value */
+      data: createdWird.toJSON({
+        flattenObjectIds: true,
+        depopulate: true,
+      }),
     };
   }
 

@@ -6,6 +6,7 @@ import { DivisionSubject } from '../enum/division-subject.enum';
 import { DIVISION_VALIDARION } from '../constants/divisions-validation.constant';
 import { GLOBAL_VALIDATION } from '@shared/constants/validation-helpers.constant';
 import { InstituteDocument } from '@modules/institute-details/institutes/types/institute-document.type';
+import { DivisionStatus } from '../enum/division-status.enum';
 
 @Schema({ timestamps: true })
 export class Division {
@@ -59,6 +60,13 @@ export class Division {
     default: undefined,
   })
   students?: UserDocument[];
+
+  @Prop({
+    type: Number,
+    enum: DivisionStatus,
+    default: DivisionStatus.ACTIVE,
+  })
+  divisionStatus!: DivisionStatus;
 }
 
 const divisionSchema = SchemaFactory.createForClass(Division);

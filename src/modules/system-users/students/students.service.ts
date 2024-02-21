@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { Role } from '@shared/enums/role.enum';
 import { UserDocument } from '../users/types/user-document.type';
 import { InstitutesService } from '@modules/institute-details/institutes/institutes.service';
+import { AccountStatus } from '../users/enums/account-status.enum';
 
 @Injectable()
 export class StudentsService {
@@ -28,7 +29,7 @@ export class StudentsService {
   ) {
     const [author, isntitute] = await Promise.all([
       await this.instituteManagersService.findInstituteManagerByID(authorID),
-      await this.institutesService.findInstituteByID(instituteID),
+      await this.institutesService.findActiveInstituteByID(instituteID),
     ]);
     if (!author)
       throw new HttpException(
@@ -88,7 +89,11 @@ export class StudentsService {
 
   async findStudentByID(StudentID: string): Promise<UserDocument | null> {
     return this.studenstModel.findOne<UserDocument>({
-      $and: [{ _id: new Types.ObjectId(StudentID) }, { role: Role.STUDENT }],
+      $and: [
+        { _id: new Types.ObjectId(StudentID) },
+        { role: Role.STUDENT },
+        { accountStatus: AccountStatus.ACTIVE },
+      ],
     });
   }
 
@@ -105,6 +110,7 @@ export class StudentsService {
           },
         },
         { role: Role.STUDENT },
+        { accountStatus: AccountStatus.ACTIVE },
       ],
     });
   }

@@ -39,37 +39,5 @@ export class UsersService {
     return this.userModel.findById<UserDocument>(userID).exec();
   }
 
-  // async findStudentByDivisonID(
-  //   StudentID: string,
-  //   divisonID: string,
-  // ): Promise<UserDocument | null> {
-  //   return this.userModel.findOne<UserDocument>({
-  //     $and: [
-  //       { _id: new Types.ObjectId(StudentID) },
-  //       {
-  //         'studentProperties.divisions': {
-  //           $in: [new Types.ObjectId(divisonID)],
-  //         },
-  //       },
-  //       { role: Role.STUDENT },
-  //     ],
-  //   });
-  // }
-
-  // async findTeacherByDivisionID(
-  //   userID: string,
-  //   divisonID: string,
-  // ): Promise<UserDocument | null> {
-  //   return this.userModel.findOne<UserDocument>({
-  //     $and: [
-  //       { _id: new Types.ObjectId(userID) },
-  //       {
-  //         'teacherProperties.divisions': {
-  //           $in: [new Types.ObjectId(divisonID)],
-  //         },
-  //       },
-  //       { role: Role.TEACHER },
-  //     ],
-  //   });
-  // }
+  //  find user for admin and find all users for admin
 }

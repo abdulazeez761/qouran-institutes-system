@@ -58,15 +58,24 @@ export class DivisionsController {
       instituteManagerID,
     );
   }
-
-  @Get()
+  @Roles([Role.SUPER_ADMIN])
+  @Get(ROUTES.DIVISIONS.FIND_ALL)
   findAll() {
     return this.divisionsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.divisionsService.findOne(+id);
+  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
+  @Get(ROUTES.DIVISIONS.FIND_INSTITUTE_DIVISION)
+  findInsituteDivisions(@Param('instituteID') instiiuteID: string) {
+    return this.divisionsService.findInstituteDivisions(instiiuteID);
+  }
+
+  @Get(ROUTES.DIVISIONS.FIND_ONE)
+  findOne(
+    @Param('institutesID') instituteID: string,
+    @Param('divisionsID') divionID: string,
+  ) {
+    return this.divisionsService.findOne(instituteID, divionID);
   }
 
   @Patch(':id')

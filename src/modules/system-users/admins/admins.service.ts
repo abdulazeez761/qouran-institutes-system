@@ -55,6 +55,7 @@ export class AdminsService {
       .findOne<UserDocument>({
         $and: [
           { _id: new Types.ObjectId(admingID) },
+
           {
             $or: [{ role: Role.ADMIN }, { role: Role.SUPER_ADMIN }],
           },

@@ -63,7 +63,10 @@ export class RegisterService {
         translationKey: 'shared.success.create',
         args: { entity: 'entities.user' },
       },
-      data: createdAdmin,
+      data: createdAdmin.toJSON({
+        flattenObjectIds: true,
+        depopulate: true,
+      }),
     };
   }
   // intitute admin is the sheikh
@@ -87,7 +90,10 @@ export class RegisterService {
         translationKey: 'shared.success.create',
         args: { entity: 'entities.user' },
       },
-      data: createdAdmin,
+      data: createdAdmin.toJSON({
+        flattenObjectIds: true,
+        depopulate: true,
+      }),
     };
   }
 
@@ -101,7 +107,7 @@ export class RegisterService {
     const hashedPassword = await bcrypt.hash(password, salt);
     createTeacherDto.password = hashedPassword;
 
-    const createdAdmin =
+    const createdTeacher =
       await this.teacherPropertiesSchemaeachersService.createInstituteTeacerForAuth(
         createTeacherDto,
         instituteID,
@@ -113,7 +119,10 @@ export class RegisterService {
         translationKey: 'shared.success.create',
         args: { entity: 'entities.user' },
       },
-      data: createdAdmin,
+      data: createdTeacher.toJSON({
+        flattenObjectIds: true,
+        depopulate: true,
+      }),
     };
   }
 
@@ -127,7 +136,7 @@ export class RegisterService {
     const hashedPassword = await bcrypt.hash(password, salt);
     createStudentDto.password = hashedPassword;
 
-    const createdAdmin =
+    const craetedStudetn =
       await this.studentsService.createInstituteStudentForAuth(
         createStudentDto,
         instituteID,
@@ -139,7 +148,10 @@ export class RegisterService {
         translationKey: 'shared.success.create',
         args: { entity: 'entities.user' },
       },
-      data: createdAdmin,
+      data: craetedStudetn.toJSON({
+        flattenObjectIds: true,
+        depopulate: true,
+      }),
     };
   }
 }

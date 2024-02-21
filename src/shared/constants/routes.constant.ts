@@ -21,7 +21,8 @@ export const ROUTES = {
     FIND_ALL: '',
     FIND_ONE: ':institutesID',
     UPDATE_ONE: ':institutesID',
-    DELETE_ONE: ':institutesID',
+    DELETE_ONE: 'delete/:institutesID',
+    UN_DELETE_ONE: 'undelete/:institutesID',
     ADD_INSTITUTE_MANAGER: ':institutesID/:managerID',
   },
 
@@ -29,6 +30,7 @@ export const ROUTES = {
     CONTROLLER: 'divisions',
     CREATE: ':institutesID',
     FIND_ALL: '',
+    FIND_INSTITUTE_DIVISION: ':instituteID',
     FIND_ONE: ':institutesID/:divisionsID',
     UPDATE_ONE: ':institutesID/:divisionsID',
     DELETE_ONE: ':institutesID/:divisionsID',

@@ -1,3 +1,4 @@
+import { InstituteStatus } from './enum/institute-status.enum';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateInstituteDto } from './dto/create-institute.dto';
 import { UpdateInstituteDto } from './dto/update-institute.dto';
@@ -72,7 +73,7 @@ export class InstitutesService {
   async findOne(
     instituteID: string,
   ): Promise<ResponseFromServiceI<InstituteDocument>> {
-    const institute = await this.findInstituteByID(instituteID);
+    const institute = await this.findActiveInstituteByID(instituteID);
     if (!institute)
       throw new HttpException(
         'institute does not exist!',
@@ -98,7 +99,7 @@ export class InstitutesService {
       this.instituteManagersService.findInstituteManagerOrSuperAdminByID(
         instituteManagerID,
       ),
-      this.findInstituteByID(instituteID),
+      this.findActiveInstituteByID(instituteID),
     ]);
     if (!isntituteManager)
       throw new HttpException(
@@ -124,14 +125,90 @@ export class InstitutesService {
     };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} institute`;
+  async softDeleteInstitute(instituteID: string, instituteManagerID: string) {
+    const [isntituteManager, institute] = await Promise.all([
+      this.instituteManagersService.findInstituteManagerOrSuperAdminByID(
+        instituteManagerID,
+      ),
+      this.findActiveInstituteByID(instituteID),
+    ]);
+    if (!isntituteManager)
+      throw new HttpException(
+        'you are not authorized for this action',
+        HttpStatus.BAD_REQUEST,
+      );
+    if (!institute)
+      throw new HttpException("institute Doesn't exist", HttpStatus.NOT_FOUND);
+    await this.instituteModel
+      .updateOne(
+        { _id: new Types.ObjectId(instituteID) },
+        { $set: { isntituteStatus: InstituteStatus.DELETED } },
+      )
+      .exec();
+    return {
+      data: institute,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.institute' },
+      },
+    };
   }
 
-  async findInstituteByID(
+  async unDeletInsitiute(instituteID: string, instituteManagerID: string) {
+    const [isntituteManager, institute] = await Promise.all([
+      this.instituteManagersService.findInstituteManagerOrSuperAdminByID(
+        instituteManagerID,
+      ),
+      this.findDeletedInstituteByID(instituteID),
+    ]);
+    if (!isntituteManager)
+      throw new HttpException(
+        'you are not authorized for this action',
+        HttpStatus.BAD_REQUEST,
+      );
+    if (!institute)
+      throw new HttpException("institute Doesn't exist", HttpStatus.NOT_FOUND);
+    await this.instituteModel
+      .updateOne(
+        { _id: new Types.ObjectId(instituteID) },
+        { $set: { isntituteStatus: InstituteStatus.ACTIVE } },
+      )
+      .exec();
+    return {
+      data: institute,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.institute' },
+      },
+    };
+  }
+
+  async findActiveInstituteByID(
     instituteID: string,
   ): Promise<InstituteDocument | null> {
-    return this.instituteModel.findById<InstituteDocument>(instituteID).exec();
+    return this.instituteModel.findOne<InstituteDocument>({
+      $and: [
+        {
+          _id: new Types.ObjectId(instituteID),
+        },
+        { isntituteStatus: InstituteStatus.ACTIVE },
+      ],
+    });
+  }
+
+  async findDeletedInstituteByID(
+    instituteID: string,
+  ): Promise<InstituteDocument | null> {
+    return this.instituteModel.findOne<InstituteDocument>({
+      $and: [
+        {
+          _id: new Types.ObjectId(instituteID),
+        },
+        { isntituteStatus: InstituteStatus.DELETED },
+      ],
+    });
   }
 
   async addInstituteManager(
@@ -140,7 +217,7 @@ export class InstitutesService {
     adminID: string,
   ) {
     const [institute, instituteManagerToAdd, admin] = await Promise.all([
-      this.findInstituteByID(institutesID),
+      this.findActiveInstituteByID(institutesID),
       this.instituteManagersService.findInstituteManagerByID(instituteMangerID),
       this.instituteManagersService.findInstituteManagerOrSuperAdminByID(
         adminID,
@@ -185,7 +262,7 @@ export class InstitutesService {
       instituteManagerToAdd._id as unknown as UserDocument,
     );
     instituteManagerToAdd.instituteManagerProperties?.institutes?.push(
-      institute as unknown as InstituteDocument,
+      institute._id as unknown as InstituteDocument,
     );
     const [updatedInstitute] = await Promise.all([
       institute.save(),
