@@ -6,6 +6,7 @@ import { ROUTES } from '@shared/constants/routes.constant';
 import { Role } from '@shared/enums/role.enum';
 import { Roles } from '@decorators/roles.decorator';
 import { UserID } from '@decorators/user-id.decorator';
+import { ParseMongooseObjectIdPipe } from 'core/pipe/parse-mogoose-objectID.pipe';
 
 @Controller(ROUTES.INSTITUTES.CONTROLLER)
 export class InstitutesController {
@@ -28,7 +29,9 @@ export class InstitutesController {
 
   @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Get(ROUTES.INSTITUTES.FIND_ONE)
-  findOne(@Param('institutesID') institutesID: string) {
+  findOne(
+    @Param('institutesID', ParseMongooseObjectIdPipe) institutesID: string,
+  ) {
     return this.institutesService.findOne(institutesID);
   }
 
@@ -36,7 +39,7 @@ export class InstitutesController {
   @Patch(ROUTES.INSTITUTES.UPDATE_ONE)
   update(
     @Body() updateInstituteDto: UpdateInstituteDto,
-    @Param('institutesID') instituteID: string,
+    @Param('institutesID', ParseMongooseObjectIdPipe) instituteID: string,
     @UserID() instituteManagerID: string,
   ) {
     return this.institutesService.update(
@@ -47,23 +50,11 @@ export class InstitutesController {
   }
   @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Patch(ROUTES.INSTITUTES.DELETE_ONE)
-  softDeleteInstitute(
-    @Param('institutesID') instituteID: string,
+  deleteOrUnDeleteInstitute(
+    @Param('institutesID', ParseMongooseObjectIdPipe) instituteID: string,
     @UserID() instituteManagerID: string,
   ) {
-    return this.institutesService.softDeleteInstitute(
-      instituteID,
-      instituteManagerID,
-    );
-  }
-
-  @Roles([Role.SUPER_ADMIN, Role.ADMIN])
-  @Patch(ROUTES.INSTITUTES.UN_DELETE_ONE)
-  unDeleteInstitute(
-    @Param('institutesID') instituteID: string,
-    @UserID() instituteManagerID: string,
-  ) {
-    return this.institutesService.unDeletInsitiute(
+    return this.institutesService.deleteOrUnDeleteInstitute(
       instituteID,
       instituteManagerID,
     );
@@ -72,8 +63,8 @@ export class InstitutesController {
   @Roles([Role.ADMIN, Role.SUPER_ADMIN])
   @Patch(ROUTES.INSTITUTES.ADD_INSTITUTE_MANAGER)
   addInstituteManager(
-    @Param('institutesID') institutesID: string,
-    @Param('managerID') managerID: string,
+    @Param('institutesID', ParseMongooseObjectIdPipe) institutesID: string,
+    @Param('managerID', ParseMongooseObjectIdPipe) managerID: string,
     @UserID() adminID: string,
   ) {
     return this.institutesService.addInstituteManager(

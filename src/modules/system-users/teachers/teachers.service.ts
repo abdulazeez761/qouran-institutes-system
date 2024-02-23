@@ -11,6 +11,7 @@ import { UserDocument } from '../users/types/user-document.type';
 import { InstitutesService } from '@modules/institute-details/institutes/institutes.service';
 import { InstituteManagersService } from '../institute-managers/institute-managers.service';
 import { AccountStatus } from '../users/enums/account-status.enum';
+import { ResponseFromServiceI } from '@shared/interfaces/general/response-from-service.interface';
 
 @Injectable()
 export class TeachersService {
@@ -72,17 +73,91 @@ export class TeachersService {
     return createdTeacher;
   }
 
-  findAll() {
-    return `This action returns all teachers`;
+  async findAll(): Promise<ResponseFromServiceI<UserDocument[] | null>> {
+    const users = await this.teacherModel.find({ role: Role.TEACHER });
+    return {
+      data: users,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findAll',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} teacher`;
+  async findOne(
+    teacherID: string,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const teacher = await this.findActiveTeacherByID(teacherID);
+
+    if (!teacher)
+      throw new HttpException("teacher doesn't exist!", HttpStatus.NOT_FOUND);
+
+    return {
+      data: teacher,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findOne',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
-  update(id: number, updateTeacherDto: UpdateTeacherDto) {
-    return `This action updates a #${id} ${updateTeacherDto} teacher`;
+  async update(
+    teacherID: string,
+    updateTeacherDto: UpdateTeacherDto,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const teacher = await this.findActiveTeacherByID(teacherID);
+
+    if (!teacher)
+      throw new HttpException("teacher doesn't exist!", HttpStatus.NOT_FOUND);
+
+    await this.teacherModel.updateOne(
+      { _id: new Types.ObjectId(teacherID) },
+      { $set: { ...updateTeacherDto } },
+    );
+
+    return {
+      data: teacher,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
+
+  async suspendOrUnSuspendTeahcer(
+    teahcerID: string,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const teacher = await this.teacherModel.findOne<UserDocument>({
+      $and: [{ _id: new Types.ObjectId(teahcerID) }, { role: Role.TEACHER }],
+    });
+    if (!teacher)
+      throw new HttpException("teacher doesn't exist!", HttpStatus.NOT_FOUND);
+
+    const status =
+      teacher.accountStatus === AccountStatus.ACTIVE
+        ? AccountStatus.DELETED
+        : AccountStatus.ACTIVE;
+
+    await this.teacherModel
+      .updateOne(
+        { _id: new Types.ObjectId(teahcerID) },
+        { $set: { accountStatus: status } },
+      )
+      .exec();
+    teacher.accountStatus = status;
+    return {
+      data: teacher,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.delete',
+        args: { entity: 'entities.user' },
+      },
+    };
+  }
+
   async findTeacherByDivisionID(
     userID: string,
     divisonID: string,
@@ -100,7 +175,7 @@ export class TeachersService {
       ],
     });
   }
-  async findTeacherByID(teacherID: string): Promise<UserDocument | null> {
+  async findActiveTeacherByID(teacherID: string): Promise<UserDocument | null> {
     return this.teacherModel.findOne<UserDocument>({
       $and: [
         { _id: new Types.ObjectId(teacherID) },
@@ -108,8 +183,5 @@ export class TeachersService {
         { accountStatus: AccountStatus.ACTIVE },
       ],
     });
-  }
-  remove(id: number) {
-    return `This action removes a #${id} teacher`;
   }
 }

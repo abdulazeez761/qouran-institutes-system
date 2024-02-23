@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param } from '@nestjs/common';
 import { DivisionsService } from './divisions.service';
 import { CreateDivisionDto } from './dto/create-division.dto';
 import { UpdateDivisionDto } from './dto/update-division.dto';
@@ -14,6 +6,7 @@ import { ROUTES } from '@shared/constants/routes.constant';
 import { Roles } from '@decorators/roles.decorator';
 import { Role } from '@shared/enums/role.enum';
 import { UserID } from '@decorators/user-id.decorator';
+import { ParseMongooseObjectIdPipe } from 'core/pipe/parse-mogoose-objectID.pipe';
 
 @Controller(ROUTES.DIVISIONS.CONTROLLER)
 export class DivisionsController {
@@ -23,7 +16,7 @@ export class DivisionsController {
   @Post(ROUTES.DIVISIONS.CREATE)
   create(
     @Body() createDivisionDto: CreateDivisionDto,
-    @Param('institutesID') institutesID: string,
+    @Param('institutesID', ParseMongooseObjectIdPipe) institutesID: string,
     @UserID() adminID: string,
   ) {
     return this.divisionsService.create(
@@ -35,8 +28,8 @@ export class DivisionsController {
 
   @Patch(ROUTES.DIVISIONS.ADD_STUDENT)
   addStudent(
-    @Param('divisionsID') divisionID: string,
-    @Param('studentID') studentID: string,
+    @Param('divisionsID', ParseMongooseObjectIdPipe) divisionID: string,
+    @Param('studentID', ParseMongooseObjectIdPipe) studentID: string,
     @UserID() instituteManagerID: string,
   ) {
     return this.divisionsService.addStudent(
@@ -48,8 +41,8 @@ export class DivisionsController {
 
   @Patch(ROUTES.DIVISIONS.ADD_TEACHER)
   addTeahcer(
-    @Param('divisionsID') divisionID: string,
-    @Param('teacherID') studentID: string,
+    @Param('divisionsID', ParseMongooseObjectIdPipe) divisionID: string,
+    @Param('teacherID', ParseMongooseObjectIdPipe) studentID: string,
     @UserID() instituteManagerID: string,
   ) {
     return this.divisionsService.addTeacher(
@@ -66,28 +59,30 @@ export class DivisionsController {
 
   @Roles([Role.SUPER_ADMIN, Role.ADMIN])
   @Get(ROUTES.DIVISIONS.FIND_INSTITUTE_DIVISION)
-  findInsituteDivisions(@Param('instituteID') instiiuteID: string) {
+  findInsituteDivisions(
+    @Param('instituteID', ParseMongooseObjectIdPipe) instiiuteID: string,
+  ) {
     return this.divisionsService.findInstituteDivisions(instiiuteID);
   }
 
   @Get(ROUTES.DIVISIONS.FIND_ONE)
   findOne(
-    @Param('institutesID') instituteID: string,
-    @Param('divisionsID') divionID: string,
+    @Param('institutesID', ParseMongooseObjectIdPipe) instituteID: string,
+    @Param('divisionsID', ParseMongooseObjectIdPipe) divionID: string,
   ) {
     return this.divisionsService.findOne(instituteID, divionID);
   }
 
-  @Patch(':id')
+  @Patch(ROUTES.DIVISIONS.UPDATE_ONE)
   update(
-    @Param('id') id: string,
+    @Param('divisionID') divionID: string,
     @Body() updateDivisionDto: UpdateDivisionDto,
   ) {
-    return this.divisionsService.update(+id, updateDivisionDto);
+    return this.divisionsService.update(updateDivisionDto, divionID);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.divisionsService.remove(+id);
+  @Patch(ROUTES.DIVISIONS.DELETE_ONE)
+  remove(@Param('divisionID', ParseMongooseObjectIdPipe) divisionID: string) {
+    return this.divisionsService.deleteOrUnDelete(divisionID);
   }
 }

@@ -1,6 +1,7 @@
 import { Controller, Get, Body, Patch, Param, Delete } from '@nestjs/common';
 import { InstituteManagersService } from './institute-managers.service';
 import { UpdateInstituteManagerDto } from './dto/update-institute-manager.dto';
+import { ParseMongooseObjectIdPipe } from 'core/pipe/parse-mogoose-objectID.pipe';
 
 @Controller('institute-manager')
 export class InstituteManagersController {
@@ -14,7 +15,7 @@ export class InstituteManagersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseMongooseObjectIdPipe) id: string) {
     return this.instituteManagerService.findOne(+id);
   }
 

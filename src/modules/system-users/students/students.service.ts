@@ -10,12 +10,10 @@ import { Role } from '@shared/enums/role.enum';
 import { UserDocument } from '../users/types/user-document.type';
 import { InstitutesService } from '@modules/institute-details/institutes/institutes.service';
 import { AccountStatus } from '../users/enums/account-status.enum';
+import { ResponseFromServiceI } from '@shared/interfaces/general/response-from-service.interface';
 
 @Injectable()
 export class StudentsService {
-  create(_createStudentDto: CreateStudentDto) {
-    return 'test';
-  }
   constructor(
     @InjectModel(SCHEMAS.USER) private readonly studenstModel: Model<User>,
     private readonly instituteManagersService: InstituteManagersService,
@@ -71,20 +69,89 @@ export class StudentsService {
     return createdStudent;
   }
 
-  findAll() {
-    return `This action returns all students`;
+  async findAll(): Promise<ResponseFromServiceI<UserDocument[] | null>> {
+    const users = await this.studenstModel.find({ role: Role.STUDENT });
+    return {
+      data: users,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findAll',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} student`;
+  async findOne(
+    studentID: string,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const student = await this.findStudentByID(studentID);
+
+    if (!student)
+      throw new HttpException("student doesn't exist!", HttpStatus.NOT_FOUND);
+
+    return {
+      data: student,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.findOne',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
-  update(id: number, updateStudentDto: UpdateStudentDto) {
-    return `This action updates a #${id} ${updateStudentDto} student`;
+  async update(
+    studentID: string,
+    updateStudentDto: UpdateStudentDto,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const student = await this.findStudentByID(studentID);
+
+    if (!student)
+      throw new HttpException("student doesn't exist!", HttpStatus.NOT_FOUND);
+
+    await this.studenstModel.updateOne(
+      { _id: new Types.ObjectId(studentID) },
+      { $set: { ...updateStudentDto } },
+    );
+
+    return {
+      data: student,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} student`;
+  async suspendOrUnsuspendStudent(
+    studentID: string,
+  ): Promise<ResponseFromServiceI<UserDocument>> {
+    const student = await this.studenstModel.findOne<UserDocument>({
+      $and: [{ _id: new Types.ObjectId(studentID) }, { role: Role.STUDENT }],
+    });
+    if (!student)
+      throw new HttpException("student doesn't exist!", HttpStatus.NOT_FOUND);
+
+    const status =
+      student.accountStatus === AccountStatus.ACTIVE
+        ? AccountStatus.DELETED
+        : AccountStatus.ACTIVE;
+
+    await this.studenstModel
+      .updateOne(
+        { _id: new Types.ObjectId(studentID) },
+        { $set: { accountStatus: status } },
+      )
+      .exec();
+    student.accountStatus = status;
+    return {
+      data: student,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.delete',
+        args: { entity: 'entities.user' },
+      },
+    };
   }
 
   async findStudentByID(StudentID: string): Promise<UserDocument | null> {

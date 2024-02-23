@@ -92,7 +92,7 @@ export class DivisionsService {
     instituteManagerID: string,
   ): Promise<ResponseFromServiceI<DivisionDocument>> {
     const [division, student, instituteManager] = await Promise.all([
-      this.findDivisinByID(divisionID),
+      this.findActiveDivisionByID(divisionID),
       this.stduentsService.findStudentByID(studentID),
       this.instituteManagersService.findInstituteManagerByID(
         instituteManagerID,
@@ -148,8 +148,8 @@ export class DivisionsService {
     instituteManagerID: string,
   ): Promise<ResponseFromServiceI<DivisionDocument>> {
     const [division, teacher, instituteManager] = await Promise.all([
-      this.findDivisinByID(divisionID),
-      this.teachersService.findTeacherByID(teacherID),
+      this.findActiveDivisionByID(divisionID),
+      this.teachersService.findActiveTeacherByID(teacherID),
       this.instituteManagersService.findInstituteManagerByID(
         instituteManagerID,
       ),
@@ -211,12 +211,15 @@ export class DivisionsService {
     };
   }
 
+  //sould be replaced in institutesModule
   async findInstituteDivisions(
     instituteID: string,
   ): Promise<ResponseFromServiceI<DivisionDocument[]>> {
-    const InstituteDivisions = await this.divisionModel.find<DivisionDocument>({
-      institute: new Types.ObjectId(instituteID),
-    });
+    const InstituteDivisions = await this.divisionModel
+      .find<DivisionDocument>({
+        institute: new Types.ObjectId(instituteID),
+      })
+      .exec();
 
     return {
       data: InstituteDivisions,
@@ -229,12 +232,15 @@ export class DivisionsService {
   }
 
   async findOne(instituteID: string, divisinID: string) {
-    const division = await this.divisionModel.find<DivisionDocument>({
-      $and: [
-        { _id: new Types.ObjectId(divisinID) },
-        { institute: new Types.ObjectId(instituteID) },
-      ],
-    });
+    const division = await this.divisionModel
+      .find<DivisionDocument>({
+        $and: [
+          { _id: new Types.ObjectId(divisinID) },
+          { institute: new Types.ObjectId(instituteID) },
+          { divisionStatus: DivisionStatus.ACTIVE },
+        ],
+      })
+      .exec();
 
     if (!division)
       throw new HttpException('division does not exist', HttpStatus.NOT_FOUND);
@@ -249,22 +255,81 @@ export class DivisionsService {
     };
   }
 
-  update(id: number, updateDivisionDto: UpdateDivisionDto) {
-    return `This action updates a #${id} ${updateDivisionDto} division`;
+  async update(updateDivisionDto: UpdateDivisionDto, divisionID: string) {
+    const divisionToUpdate = await this.findDivisinByID(divisionID);
+    if (
+      !divisionToUpdate ||
+      divisionToUpdate.divisionStatus === DivisionStatus.DELETED
+    )
+      throw new HttpException('division does not exist', HttpStatus.NOT_FOUND);
+
+    await this.divisionModel
+      .updateOne(
+        { _id: new Types.ObjectId(divisionID) },
+        { $set: { ...updateDivisionDto } },
+      )
+      .exec();
+    return {
+      data: divisionToUpdate,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.division' },
+      },
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} division`;
+  async deleteOrUnDelete(
+    divisionID: string,
+  ): Promise<ResponseFromServiceI<DivisionDocument>> {
+    const divisionToUpdate = await this.findDivisinByID(divisionID);
+    if (!divisionToUpdate)
+      throw new HttpException('division does not exist', HttpStatus.NOT_FOUND);
+    const status =
+      divisionToUpdate.divisionStatus === DivisionStatus.ACTIVE
+        ? DivisionStatus.DELETED
+        : DivisionStatus.ACTIVE;
+
+    await this.divisionModel
+      .updateOne(
+        { _id: new Types.ObjectId(divisionID) },
+        { $set: { divisionStatus: status } },
+      )
+      .exec();
+    divisionToUpdate.divisionStatus = status;
+    return {
+      data: divisionToUpdate,
+      httpStatus: HttpStatus.OK,
+      message: {
+        translationKey: 'shared.success.update',
+        args: { entity: 'entities.division' },
+      },
+    };
   }
   async findDivisinByID(divisionID: string): Promise<DivisionDocument | null> {
     return (
       this.divisionModel
         .findOne<DivisionDocument>({
+          $and: [{ _id: new Types.ObjectId(divisionID) }],
+        })
+        //populate should be enhanced or has its's own service because i'll be using it alot around the application
+        .populate({
+          path: 'institute',
+          select: { isntituteStatus: 1 },
+        })
+        .exec()
+    );
+  }
+
+  async findActiveDivisionByID(
+    divisionID: string,
+  ): Promise<DivisionDocument | null> {
+    return (
+      this.divisionModel
+        .findOne<DivisionDocument>({
           $and: [
             { _id: new Types.ObjectId(divisionID) },
-            {
-              divisionStatus: DivisionStatus.ACTIVE,
-            },
+            { divisionStatus: DivisionStatus.ACTIVE },
           ],
         })
         //populate should be enhanced or has its's own service because i'll be using it alot around the application

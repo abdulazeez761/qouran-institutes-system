@@ -30,6 +30,7 @@ export type I18nTranslations = {
         "notification": string;
         "institute": string;
         "division": string;
+        "wird": string;
     };
     "shared": {
         "success": {

@@ -14,6 +14,7 @@ import { CreateAdminDto } from '@modules/system-users/admins/dto/create-admin.dt
 import { Roles } from '@decorators/roles.decorator';
 import { Role } from '@shared/enums/role.enum';
 import { CreateStudentDto } from '@modules/system-users/students/dto/create-student.dto';
+import { ParseMongooseObjectIdPipe } from 'core/pipe/parse-mogoose-objectID.pipe';
 
 @ApiTags(ROUTES.AUTH.CONTROLLER)
 @Controller(ROUTES.AUTH.CONTROLLER)
@@ -56,7 +57,7 @@ export class AuthController {
   @Post(ROUTES.AUTH.REGISTER_INSTITUTE_TEACHER)
   registerDivisionTeacher(
     @Body() createStudentDto: CreateStudentDto,
-    @Param('instituteID') instituteID: string,
+    @Param('instituteID', ParseMongooseObjectIdPipe) instituteID: string,
     @UserID() authorID: string,
   ) {
     return this.registerService.registerInstituteTeacher(
@@ -70,7 +71,7 @@ export class AuthController {
   @Post(ROUTES.AUTH.REGISTER_INSTITUTE_STUDENT)
   registerDivisionStudetn(
     @Body() createStudentDto: CreateStudentDto,
-    @Param('instituteID') instituteID: string,
+    @Param('instituteID', ParseMongooseObjectIdPipe) instituteID: string,
     @UserID() authorID: string,
   ) {
     return this.registerService.registerIntituteStudent(
