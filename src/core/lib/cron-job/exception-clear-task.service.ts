@@ -9,5 +9,8 @@ export class ExceptionClearTaskService {
     truncate('./logs/app-exceptions.json', 0, () =>
       console.log("deleted file 'app-exceptions.json' Successfully"),
     );
+    truncate('./logs/app-requests.json', 0, () =>
+      console.log("deleted file 'app-requests.json' Successfully"),
+    );
   }
 }

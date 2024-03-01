@@ -42,31 +42,29 @@ export class RolesGuard implements CanActivate {
         return true;
       }
 
-      const authorization = request.headers.authorization;
-
-      if (
-        !authorization ||
-        Array.isArray(authorization) ||
-        typeof authorization !== 'string'
-      )
-        throw new HttpException('Invalid Headers', HttpStatus.UNAUTHORIZED);
-
-      const [bearer, accessToken] = authorization.split(' ');
-
-      if (bearer !== 'Bearer')
-        throw new HttpException('Invalid Headers', HttpStatus.UNAUTHORIZED);
+      const accessToken = request.cookies['accessToken'];
 
       const decodedToken = this.jwtService.verify<DecodedTokenI>(accessToken, {
         secret: this.configService.get<string>('USER_ACCESS_TOKEN_SECRET')!,
       });
 
       const { sub, role } = decodedToken;
+
       const cacheObject = await this.cacheService.get<CacheObjectI>(sub + '');
 
-      const isTokenFromCacheSameAsTokenFromHeaders =
-        cacheObject?.accessToken === accessToken;
+      if (!cacheObject?.refreshToken)
+        throw new HttpException(
+          'You must be logged in first',
+          HttpStatus.BAD_REQUEST,
+        );
+      const decodedRefreshToken = this.jwtService.decode<DecodedTokenI>(
+        cacheObject?.refreshToken,
+      );
 
-      if (!isTokenFromCacheSameAsTokenFromHeaders)
+      const isTokenFromCacheSameAsTokenFromCookie =
+        decodedRefreshToken?.sub == sub;
+
+      if (!isTokenFromCacheSameAsTokenFromCookie)
         throw new HttpException('Nice Try', HttpStatus.UNAUTHORIZED);
 
       const isRoleIncluded = roles.includes(role);

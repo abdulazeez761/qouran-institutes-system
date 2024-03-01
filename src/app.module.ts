@@ -11,6 +11,7 @@ import {
   i18nOptions,
   jwtOptions,
   mongooseOptions,
+  throttlerOptons,
 } from 'shared/configs/app.option';
 import { CacheModule } from 'core/lib/cache/cache.module';
 import { I18nModule } from 'nestjs-i18n';
@@ -22,9 +23,9 @@ import { ConfigModule } from '@nestjs/config';
 import helmet from 'helmet';
 import { RequestIdMiddleware } from 'core/middlewares/request-id.middleware';
 import { MongooseModule } from '@nestjs/mongoose';
-// import { Role } from '@shared/enums/role.enum';
-// import { Roles } from '@decorators/roles.decorator';
-
+import { ThrottlerModule } from '@nestjs/throttler';
+import { IsReFreshTokenValidMiddleWare } from '@middlewares/is-refresh-token-valid.middleware';
+import { RefreshTokenMiddleWare } from '@middlewares/refresh-access-token.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot(configOptions),
@@ -32,6 +33,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     ScheduleModule.forRoot(),
     CronJobModule,
     I18nModule.forRoot(i18nOptions),
+    ThrottlerModule.forRoot(throttlerOptons),
     JwtModule.registerAsync(jwtOptions),
     CacheModule.register('cache-manager-redis-yet'),
     MongooseModule.forRootAsync(mongooseOptions),
@@ -43,10 +45,16 @@ import { MongooseModule } from '@nestjs/mongoose';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    // consumer.apply(helmet(), RequestIdMiddleware , Roles([Role.SUPER_ADMIN])).forRoutes({
-    consumer.apply(helmet(), RequestIdMiddleware).forRoutes({
-      path: '*',
-      method: RequestMethod.ALL,
-    });
+    consumer
+      .apply(
+        helmet(),
+        RequestIdMiddleware,
+        IsReFreshTokenValidMiddleWare,
+        RefreshTokenMiddleWare,
+      )
+      .forRoutes({
+        path: '*',
+        method: RequestMethod.ALL,
+      });
   }
 }

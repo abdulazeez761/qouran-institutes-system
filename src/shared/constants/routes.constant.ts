@@ -19,14 +19,14 @@ export const ROUTES = {
     CONTROLLER: 'students',
     FIND_ALL: '',
     FIND_ONE: ':studentID',
-    UPDATE_ONE: ':studentID',
+    UPDATE_ONE: 'update-student',
     SUSPEND_ONE: 'suspend-unsuspend/:studentID',
   },
   TEACHERS: {
     CONTROLLER: 'teachers',
     FIND_ALL: '',
     FIND_ONE: ':teacherID',
-    UPDATE_ONE: ':teacherID',
+    UPDATE_ONE: 'update-teacher',
     SUSPEND_ONE: 'suspend-unsuspend/:teacherID',
   },
   INSTITUTES: {

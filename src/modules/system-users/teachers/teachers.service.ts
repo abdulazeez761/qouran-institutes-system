@@ -15,9 +15,6 @@ import { ResponseFromServiceI } from '@shared/interfaces/general/response-from-s
 
 @Injectable()
 export class TeachersService {
-  create(_createTeacherDto: CreateTeacherDto) {
-    return 'test';
-  }
   constructor(
     @InjectModel(SCHEMAS.USER) private readonly teacherModel: Model<User>,
     private readonly instituteManagersService: InstituteManagersService,

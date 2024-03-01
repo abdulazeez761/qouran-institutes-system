@@ -1,4 +1,4 @@
 export interface CacheObjectI {
-  accessToken: string;
+  refreshToken: string;
   userID: string;
 }

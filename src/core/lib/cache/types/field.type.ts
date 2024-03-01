@@ -1,1 +1,1 @@
-export type Field = 'accessToken' | 'userID';
+export type Field = 'refreshToken' | 'userID';

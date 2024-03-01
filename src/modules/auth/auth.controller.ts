@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger/dist';
 import { ApiResponse } from '@nestjs/swagger/dist/decorators';
 import { Public } from 'core/decorators/public.decorator';
@@ -15,7 +15,7 @@ import { Roles } from '@decorators/roles.decorator';
 import { Role } from '@shared/enums/role.enum';
 import { CreateStudentDto } from '@modules/system-users/students/dto/create-student.dto';
 import { ParseMongooseObjectIdPipe } from 'core/pipe/parse-mogoose-objectID.pipe';
-
+import { Response } from 'express';
 @ApiTags(ROUTES.AUTH.CONTROLLER)
 @Controller(ROUTES.AUTH.CONTROLLER)
 export class AuthController {
@@ -81,38 +81,20 @@ export class AuthController {
     );
   }
 
-  // registerTeacherForInstitute(){
-
-  // }
-  // registerStudentForInstitute(){
-
-  // }
   @Public()
   @Post(ROUTES.AUTH.LOG_USER_IN)
-  logUserIn(@Body() logUserInDto: LogUserInDto) {
-    return this.loginService.logUserIn(logUserInDto);
+  logUserIn(
+    @Body() logUserInDto: LogUserInDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.loginService.logUserIn(logUserInDto, response);
   }
 
   @Post(ROUTES.AUTH.LOG_OUT)
-  logUserOut(@UserID() userID: string) {
-    return this.logoutService.logUserOut(userID);
+  logUserOut(
+    @UserID() userID: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    return this.logoutService.logUserOut(userID, response);
   }
-
-  // @Roles([Role.SUPER_ADMIN])
-  // @Post(ROUTES.AUTH.REGISTER_ADMIN)
-  // registerAdminForInstitute(
-  //   @Body() createAdminDto: CreateAdminDto,
-  //   // @Param('instituteID') instituteID: string,
-  // ) {
-  //   return this.registerService.registerAdmin(createAdminDto);
-  // }
-
-  // @Roles([Role.SUPER_ADMIN])
-  // @Post(ROUTES.AUTH.REGISTER_ADMIN)
-  // registerAdmin(
-  //   @Body() createAdminDto: CreateAdminDto,
-  //   @UserID() instituteID: string,
-  // ) {
-  //   return this.registerService.registerAdmin(createAdminDto, instituteID);
-  // }
 }

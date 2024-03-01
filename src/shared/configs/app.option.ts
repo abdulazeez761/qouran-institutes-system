@@ -14,6 +14,7 @@ import { RedisClientOptions } from 'redis';
 import * as Joi from 'joi';
 import { ConfigService } from '@nestjs/config/dist';
 import { MongooseModuleAsyncOptions } from '@nestjs/mongoose';
+import { ThrottlerModuleOptions } from '@nestjs/throttler';
 
 export const jwtOptions: JwtModuleAsyncOptions = {
   useFactory: async (configService: ConfigService) => ({
@@ -69,6 +70,10 @@ export const configOptions: ConfigModuleOptions = {
     ALLOWED_HOSTS: Joi.string().min(1).required(),
     PREFIX: Joi.string().min(3).max(10).required(),
     APP_NAME: Joi.string().min(3).max(30).required(),
+    CLOUDINARY_API_KEY: Joi.number().required(),
+    CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+    CLOUDINARY_API_SECRET: Joi.string().required(),
+    CLOUD_SOLUTION: Joi.string().valid('CLOUDINARY').required(),
   }),
 };
 
@@ -84,3 +89,26 @@ export const mongooseOptions: MongooseModuleAsyncOptions = {
   }),
   inject: [ConfigService],
 };
+
+export const throttlerOptons: ThrottlerModuleOptions = [
+  {
+    name: 'short',
+    ttl: 1000,
+    limit: 3,
+  },
+  {
+    name: 'medium',
+    ttl: 10000,
+    limit: 20,
+  },
+  {
+    name: 'long',
+    ttl: 60000,
+    limit: 100,
+  },
+  //default
+  {
+    ttl: 10000,
+    limit: 10,
+  },
+];

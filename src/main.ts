@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bodyParser from 'body-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { useContainer } from 'class-validator';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // ======================================================
@@ -94,6 +95,7 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, document);
   }
 
+  app.use(cookieParser());
   await app.listen(port, () => {
     logger.log(
       `Application is running on port: ${port} 🚀 `,

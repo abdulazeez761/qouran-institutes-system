@@ -1,8 +1,6 @@
-import { Role } from '@shared/enums/role.enum';
+import { PrivateTokenPayloadI } from './token-payload.interface';
 
-export interface DecodedTokenI {
-  sub: string;
-  role: Role;
+export interface DecodedTokenI extends PrivateTokenPayloadI {
   iat: number;
   exp: number;
 }

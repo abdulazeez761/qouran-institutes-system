@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger/dist/decorators';
 import { GLOBAL_VALIDATION } from '@shared/constants/validation-helpers.constant';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 import { MaxLength, MinLength, IsNotEmpty } from 'class-validator';
 import { IsContainsLowercase } from 'core/decorators/is-contains-lower-case.decorator';
 import { MatchTwoProperties } from 'core/decorators/match-two-properties.decorator';
@@ -199,4 +199,34 @@ export class CreateUserDto {
     message: i18nValidationMessage<I18nTranslations>('validation.isNotEmpty'),
   })
   phoneNumber!: string;
+
+  @ApiProperty({
+    description: "teacher's profile",
+    example: 'http/photo',
+    isArray: false,
+    maxLength: GLOBAL_VALIDATION.URL.MAX_LENGTH,
+    minLength: GLOBAL_VALIDATION.URL.MIN_LENGTH,
+    name: 'profilePhoto',
+    required: true,
+    type: String,
+  })
+  @MaxLength(GLOBAL_VALIDATION.URL.MAX_LENGTH, {
+    message: i18nValidationMessage<I18nTranslations>('validation.minLength', {
+      max: GLOBAL_VALIDATION.URL.MAX_LENGTH,
+    }),
+  })
+  @MinLength(GLOBAL_VALIDATION.URL.MIN_LENGTH, {
+    message: i18nValidationMessage<I18nTranslations>('validation.minLength', {
+      min: GLOBAL_VALIDATION.URL.MIN_LENGTH,
+    }),
+  })
+  @Transform((param) => (param.value ?? '').toLowerCase().trim())
+  @IsString({
+    message: i18nValidationMessage<I18nTranslations>('validation.isString'),
+  })
+  @IsNotEmpty({
+    message: i18nValidationMessage<I18nTranslations>('validation.isNotEmpty'),
+  })
+  @IsOptional()
+  profilePhoto?: string;
 }

@@ -73,18 +73,4 @@ export class AdminsService {
       })
       .exec();
   }
-
-  // async findInstituteAdmins(
-  //   admingID: string,
-  //   instituteAdmin: string,
-  // ): Promise<UserDocument | null> {
-  //   return this.adminModel
-  //     .findOne<UserDocument>({
-  //       $and: [
-  //         { _id: new Types.ObjectId(admingID) },
-  //         { role: Role.SUPER_ADMIN },
-  //       ],
-  //     })
-  //     .exec();
-  // }
 }

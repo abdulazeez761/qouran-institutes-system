@@ -18,6 +18,7 @@ import {
 
 import { GLOBAL_VALIDATION } from '@shared/constants/validation-helpers.constant';
 import { InstituteManagerProperties } from '@modules/system-users/institute-managers/entities/institute-manager.entity';
+import { MediaObjectI } from '@shared/interfaces/db/media-object.interface';
 
 @Schema({ timestamps: true })
 export class User {
@@ -61,6 +62,17 @@ export class User {
     sparse: true,
   })
   lastName!: string;
+
+  @Prop({
+    type: {
+      url: { type: String, required: true },
+      solutionID: { type: String, required: true },
+      fileName: { type: String, required: true },
+      format: { type: String, required: true },
+    },
+    default: undefined,
+  })
+  profilePicture?: MediaObjectI | undefined;
 
   @Prop({
     type: String,
